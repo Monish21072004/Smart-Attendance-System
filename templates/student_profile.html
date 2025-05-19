@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Profiles - Smart Attendance System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: #fff; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; }
+    .header { text-align: center; padding: 30px; background: rgba(0,0,0,0.4); box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .header h1 { font-size: 3rem; margin: 0; }
+    .container { padding: 30px 50px; }
+    table { width: 100%; margin-top: 20px; background: rgba(0,0,0,0.4); border-radius: 10px; overflow: hidden; }
+    th, td { padding: 12px 15px; text-align: center; }
+    th { background-color: #ff416c; }
+    tr:nth-child(even) { background-color: rgba(255,255,255,0.1); }
+    .btn-back { margin-top: 20px; color: #fff; text-decoration: underline; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Student Profiles</h1>
+  </div>
+  <div class="container">
+    <table class="table table-dark table-striped">
+      <thead>
+        <tr>
+          <th>S.No</th>
+          <th>Username</th>
+          <th>Name</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ student.username }}</td>
+          <td>{{ student.name }}</td>
+          <td>{{ student.email }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a class="btn-back" href="{{ url_for('teacher_dashboard') }}">Back to Dashboard</a>
+  </div>
+</body>
+</html>

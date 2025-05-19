@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teacher Dashboard - Smart Attendance System</title>
+  <!-- Bootstrap CSS for responsive layout -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts for modern typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .header {
+      text-align: center;
+      padding: 30px 20px;
+      background: rgba(0, 0, 0, 0.4);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      animation: fadeInDown 1s ease-out;
+    }
+    .header h1 {
+      font-size: 3rem;
+      margin: 0;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+    }
+    .container {
+      padding: 50px 20px;
+      text-align: center;
+    }
+    .dashboard-options {
+      margin-top: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .dashboard-btn {
+      padding: 15px 40px;
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+      border: none;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+      width: 300px;
+    }
+    .dashboard-btn:hover {
+      background: linear-gradient(45deg, #ff4b2b, #ff416c);
+      transform: scale(1.1);
+    }
+    .btn-back {
+      margin-top: 20px;
+      color: #fff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @media (max-width: 768px) {
+      .header h1 { font-size: 2.5rem; }
+      .dashboard-btn { font-size: 1rem; padding: 12px 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Teacher Dashboard</h1>
+  </div>
+  <div class="container">
+    <div class="dashboard-options">
+      <button class="dashboard-btn" onclick="window.location.href='/teacher/add_student'">Add Student</button>
+      <button class="dashboard-btn" onclick="window.location.href='/teacher/student_profile'">Student Profile</button>
+      <button class="dashboard-btn" onclick="window.location.href='/teacher/attendance_report'">Attendance Check Report</button>
+    </div>
+    <div class="mt-4">
+      <a class="btn-back" href="/">Logout</a>
+    </div>
+  </div>
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

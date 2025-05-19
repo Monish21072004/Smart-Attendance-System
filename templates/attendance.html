@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Attendance System</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <style>
+    body {
+      background: linear-gradient(135deg, #e0f7fa, #80deea);
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      background-color: #0288d1;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 600;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #video {
+      border: 4px solid #0288d1;
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      background-color: #fff;
+    }
+    #capture {
+      margin-top: 25px;
+      padding: 12px 30px;
+      background-color: #0288d1;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    #capture:hover {
+      background-color: #01579b;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: 500;
+      color: #0288d1;
+    }
+    .footer {
+      background-color: #0288d1;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    }
+    @media (max-width: 768px) {
+      #video {
+        width: 100%;
+        height: auto;
+      }
+      #capture {
+        font-size: 16px;
+        padding: 10px 20px;
+      }
+    }
+  </style>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="header">
+    Smart Attendance System
+  </div>
+  <div class="container">
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="capture">Capture Photo</button>
+    <div id="result"></div>
+  </div>
+  <div class="footer">
+    &copy; 2025 Smart Attendance System | Designed with Creativity
+  </div>
+  <!-- Bootstrap JS (Optional) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom JavaScript -->
+  <script>
+    const video = document.getElementById("video");
+    const captureButton = document.getElementById("capture");
+
+    // Access webcam
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
+        video.srcObject = stream;
+        video.play();
+      }).catch(err => console.error("Error accessing webcam:", err));
+    }
+
+    // Capture photo on button click and send to Flask backend
+    captureButton.onclick = function () {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(function(blob) {
+        const form = new FormData();
+        form.append("file", blob, "image.jpg");
+        fetch("/recognize", { method: "POST", body: form })
+          .then(response => response.json())
+          .then(data => {
+            document.getElementById("result").innerText = "Attendance marked for: " + data.name;
+          })
+          .catch(error => console.error("Error:", error));
+      }, "image/jpeg");
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mark Attendance - Smart Attendance System</title>
+  <!-- Bootstrap CSS for responsive layout -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Google Fonts for modern typography -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Mono&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      font-family: 'Poppins', sans-serif;
+      color: #fff;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+    .header {
+      text-align: center;
+      padding: 30px 20px;
+      background: rgba(0,0,0,0.4);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    .header h1 {
+      font-size: 3rem;
+      margin: 0;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+    }
+    .container {
+      padding: 50px 20px;
+      text-align: center;
+      position: relative;
+    }
+    .video-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 640px;
+      max-width: 100%;
+    }
+    /* Live stream image styling */
+    #liveFeed, .captured-img {
+      width: 100%;
+      border: 5px solid #fff;
+      border-radius: 15px;
+      box-shadow: 0 6px 12px rgba(255,255,255,0.2);
+      background-color: #fff;
+    }
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .guide-box {
+      position: absolute;
+      top: 20%;
+      left: 20%;
+      width: 60%;
+      height: 60%;
+      border: 2px dashed #ff416c;
+      box-sizing: border-box;
+    }
+    .instructions {
+      position: absolute;
+      top: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+    /* Overlay for continuous predictions */
+    #predictions {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      color: #ff416c;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+      white-space: pre-line;
+      padding: 10px;
+    }
+    /* Button styling */
+    .btn-action {
+      margin-top: 25px;
+      padding: 12px 30px;
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+      border: none;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .btn-action:hover {
+      background: linear-gradient(45deg, #ff4b2b, #ff416c);
+      transform: scale(1.1);
+    }
+    .btn-back {
+      margin-top: 20px;
+      color: #fff;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Mark Attendance</h1>
+    <p>Stand inside the box and click "Mark Attendance" to freeze the current prediction</p>
+  </div>
+  <div class="container">
+    <div class="video-wrapper" style="position: relative;">
+      <!-- Live feed from the server -->
+      <img id="liveFeed" src="{{ url_for('video_feed') }}" alt="Live Feed">
+      <!-- Overlay for guide, predictions -->
+      <div class="overlay">
+        <div class="guide-box"></div>
+        <div class="instructions">Please stand within the box</div>
+        <div id="predictions"></div>
+      </div>
+    </div>
+    <br>
+    <!-- Buttons for manual control -->
+    <button id="capture" class="btn-action">Mark Attendance</button>
+    <button id="confirm" class="btn-action" style="display:none;">Confirm Attendance</button>
+    <button id="retry" class="btn-action" style="display:none;">Retry</button>
+    <p id="result"></p>
+    <br>
+    <a class="btn-back" href="{{ url_for('student_dashboard') }}">Back to Dashboard</a>
+  </div>
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let liveFeed = document.getElementById("liveFeed");
+    let predictionsDiv = document.getElementById("predictions");
+    let captureButton = document.getElementById("capture");
+    let confirmButton = document.getElementById("confirm");
+    let retryButton = document.getElementById("retry");
+    let resultParagraph = document.getElementById("result");
+    let previewFilename = "";
+    let continuousInterval;
+
+    // Function to continuously update predictions
+    function startContinuousUpdates() {
+      continuousInterval = setInterval(() => {
+        fetch("/capture_frame")
+          .then(response => response.json())
+          .then(data => {
+            if(data.error) {
+              console.error("Error: " + data.error);
+              return;
+            }
+            fetch("data:image/jpeg;base64," + data.image)
+              .then(res => res.blob())
+              .then(blob => {
+                const formData = new FormData();
+                formData.append("file", blob, "capture.jpg");
+                return fetch("/recognize_preview", {
+                  method: "POST",
+                  body: formData
+                });
+              })
+              .then(response => response.json())
+              .then(predData => {
+                if(predData.error) {
+                  console.error("Recognition error: " + predData.error);
+                  return;
+                }
+                let displayText = "";
+                predData.predictions.forEach(pred => {
+                  displayText += "Face at [" + pred.box.join(", ") + "]: " + pred.identity + "\n";
+                });
+                predictionsDiv.innerText = displayText;
+              })
+              .catch(error => console.error("Error in recognition:", error));
+          })
+          .catch(error => console.error("Error capturing frame:", error));
+      }, 2000);
+    }
+    
+    // Start continuous updates when page loads
+    startContinuousUpdates();
+
+    // When "Mark Attendance" is clicked, freeze current frame and stop continuous updates
+    captureButton.onclick = function () {
+      clearInterval(continuousInterval);
+      fetch("/capture_frame")
+        .then(response => response.json())
+        .then(data => {
+          if(data.error) {
+            resultParagraph.innerText = "Error: " + data.error;
+            return;
+          }
+          let img = document.createElement("img");
+          img.className = "captured-img";
+          img.src = "data:image/jpeg;base64," + data.image;
+          liveFeed.style.display = "none";
+          let existingImg = document.querySelector(".captured-img");
+          if(existingImg) { existingImg.remove(); }
+          document.querySelector(".video-wrapper").appendChild(img);
+          captureButton.style.display = "none";
+          confirmButton.style.display = "inline-block";
+          retryButton.style.display = "inline-block";
+          // Also run recognition on this snapshot
+          fetch("data:image/jpeg;base64," + data.image)
+            .then(res => res.blob())
+            .then(blob => {
+              const formData = new FormData();
+              formData.append("file", blob, "capture.jpg");
+              return fetch("/recognize_preview", {
+                method: "POST",
+                body: formData
+              });
+            })
+            .then(response => response.json())
+            .then(predData => {
+              if(predData.error) {
+                resultParagraph.innerText = "Error: " + predData.error;
+                return;
+              }
+              let displayText = "";
+              predData.predictions.forEach(pred => {
+                displayText += "Face at [" + pred.box.join(", ") + "]: " + pred.identity + "\n";
+              });
+              resultParagraph.innerText = displayText;
+              previewFilename = predData.filename;
+            })
+            .catch(error => console.error("Error in recognition:", error));
+        })
+        .catch(error => console.error("Error capturing frame:", error));
+    };
+
+    // Confirm Attendance button
+    confirmButton.onclick = function () {
+      fetch("/confirm_attendance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: previewFilename })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.success) {
+          resultParagraph.innerText += " | Attendance confirmed";
+          confirmButton.style.display = "none";
+          retryButton.style.display = "none";
+        } else {
+          resultParagraph.innerText = "Error: " + data.error;
+        }
+      })
+      .catch(error => console.error("Error in confirmation:", error));
+    };
+
+    // Retry button: remove snapshot and resume continuous updates
+    retryButton.onclick = function () {
+      let capturedImg = document.querySelector(".captured-img");
+      if(capturedImg) { capturedImg.remove(); }
+      liveFeed.style.display = "block";
+      resultParagraph.innerText = "";
+      captureButton.style.display = "inline-block";
+      confirmButton.style.display = "none";
+      retryButton.style.display = "none";
+      startContinuousUpdates();
+    };
+  </script>
+</body>
+</html>
